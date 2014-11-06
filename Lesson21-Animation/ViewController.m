@@ -7,126 +7,165 @@
 //
 
 #import "ViewController.h"
+#define SIZE 100
+#define ENDX CGRectGetWidth(self.view.bounds) - SIZE
+#define ENDY CGRectGetHeight(self.view.bounds) - SIZE
 
 @interface ViewController ()
-@property (strong, nonatomic) NSMutableArray* viewsArray;
+@property (strong, nonatomic) NSArray* viewsArray;
 @property (strong, nonatomic) NSArray* colorArray;
-@property (assign, nonatomic) NSInteger sizeView;
-@property (assign, nonatomic) NSInteger forward;
+@property (strong, nonatomic) NSArray* cornerViewsArray;
+@property (strong, nonatomic) NSArray* pointsArray;
+@property (strong, nonatomic) NSArray* imageArray;
+@property (strong, nonatomic) UIImageView* imageView;
+
 @end
 
 @implementation ViewController
 
-//-------------------------------------------------------------------------------
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.viewsArray   = [[NSMutableArray alloc] init];
-    NSInteger size       = 100;
-    self.sizeView        = size;
-    CGRect rectBounds    = self.view.bounds;
+    
+    UIView* firstView     = [[UIView alloc] initWithFrame:CGRectMake(100, 150, SIZE, SIZE)];
+    UIView* secondView    = [[UIView alloc] initWithFrame:CGRectMake(100, 250, SIZE, SIZE)];
+    UIView* thirdView     = [[UIView alloc] initWithFrame:CGRectMake(100, 350, SIZE, SIZE)];
+    UIView* fourView      = [[UIView alloc] initWithFrame:CGRectMake(100, 450, SIZE, SIZE)];
+    self.viewsArray       = [[NSArray alloc] initWithObjects:firstView, secondView, thirdView, fourView, nil];
 
-    NSArray* colorArray  = [[NSArray alloc] initWithObjects: UIColorFromRGB(0xf10046), UIColorFromRGB(0x9c6c4a),
-                            UIColorFromRGB(0x0098da), UIColorFromRGB(0x3ec23f), nil];
-    self.colorArray = colorArray;
-    //Create views
-    [self createViewWithX:0 andY:0 andSize:size andColor:[colorArray objectAtIndex:0]];
-    [self createViewWithX:CGRectGetWidth(rectBounds) - size andY:0 andSize:size andColor:[colorArray objectAtIndex:1]];
-    [self createViewWithX:CGRectGetWidth(rectBounds) - size andY:CGRectGetHeight(rectBounds) - size andSize:size andColor:[colorArray objectAtIndex:2]];
-    [self createViewWithX:0 andY:CGRectGetHeight(rectBounds) - size andSize:size andColor:[colorArray objectAtIndex:3]];
+    UIView* leftTop       = [[UIView alloc] initWithFrame:CGRectMake(0, ENDY, SIZE, SIZE)];
+    UIView* rightTop      = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SIZE, SIZE)];
+    UIView* rightBottom   = [[UIView alloc] initWithFrame:CGRectMake(ENDX, 0, SIZE, SIZE)];
+    UIView* leftBottom    = [[UIView alloc] initWithFrame:CGRectMake(ENDX, ENDY, SIZE, SIZE)];
+    rightTop.tag = 1;
+    //self.rightTop = rightTop;
+    
+    self.cornerViewsArray = [[NSArray alloc] initWithObjects:   leftTop,
+                                                                rightTop,
+                                                                rightBottom,
+                                                                leftBottom, nil];
+    
+    self.colorArray       = [NSArray arrayWithObjects:  UIColorFromRGB(0xf10046),
+                                                        UIColorFromRGB(0x9c6c4a),
+                                                        UIColorFromRGB(0x0098da),
+                                                        UIColorFromRGB(0x3ec23f), nil];
+    
+    self.pointsArray      = [NSArray arrayWithObjects:  [NSValue valueWithCGPoint:CGPointMake(0, 0)],
+                                                        [NSValue valueWithCGPoint:CGPointMake(ENDX, 0)],
+                                                        [NSValue valueWithCGPoint:CGPointMake(ENDX, ENDY)],
+                                                        [NSValue valueWithCGPoint:CGPointMake(0, ENDY)], nil];
 
-    for (UIView* view in self.viewsArray) {
-        [self startAnimationForward:view];
-    }
+    UIImageView* imageView         = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, SIZE, SIZE)];
+    self.imageView                 = imageView;
+    self.imageArray                = [NSArray arrayWithObjects: [UIImage imageNamed:@"1.png"],
+                                                                [UIImage imageNamed:@"2.png"],
+                                                                [UIImage imageNamed:@"3.png"],
+                                                                [UIImage imageNamed:@"4.png"],
+                                                                [UIImage imageNamed:@"5.png"],
+                                                                [UIImage imageNamed:@"6.png"],
+                                                                [UIImage imageNamed:@"7.png"],
+                                                                [UIImage imageNamed:@"8.png"],
+                                                                [UIImage imageNamed:@"9.png"],
+                                                                [UIImage imageNamed:@"10.png"], nil];
+
+            for (UIView* view in self.viewsArray) {
+    view.backgroundColor           = [self randomColor];
+        [self.view addSubview:view];
+        }
+
+        [self startAnimation:firstView withAnimation:UIViewAnimationOptionCurveEaseIn];
+        [self startAnimation:secondView withAnimation:UIViewAnimationOptionCurveEaseOut];
+        [self startAnimation:thirdView withAnimation:UIViewAnimationOptionCurveEaseInOut];
+        [self startAnimation:fourView withAnimation:UIViewAnimationOptionCurveLinear];
 
 
-    // Do any additional setup after loading the view, typically from a nib.
+        for (UIView* view in self.cornerViewsArray) {
+        [self.view addSubview:view];
+        }
+
+    self.imageView.animationImages = self.imageArray;
+    self.imageView.transform       = CGAffineTransformMakeRotation(M_PI);
+    [rightTop addSubview:imageView];
+
+    [self.imageView startAnimating];
+
+    [self startAnimationCorner:leftTop toPoints:self.pointsArray andColor:self.colorArray andStep:0];
+    [self startAnimationCorner:rightTop toPoints:self.pointsArray andColor:self.colorArray andStep:1];
+    [self startAnimationCorner:rightBottom toPoints:self.pointsArray andColor:self.colorArray andStep:2];
+    [self startAnimationCorner:leftBottom toPoints:self.pointsArray andColor:self.colorArray andStep:3];
+
+
+    
 }
-//-------------------------------------------------------------------------------
-    //Create views and add to mutableArray
-- (UIView*) createViewWithX: (CGFloat)x andY: (CGFloat)y andSize: (NSInteger)size andColor: (UIColor*)color {
 
-    CGRect rect          = CGRectMake(x, y, size, size);
-    UIView* view         = [[UIView alloc] initWithFrame:rect];
-    view.backgroundColor = color;
-    [self.viewsArray addObject:view];
-    [self.view addSubview:view];
-    return view;
-}
-
-//-------------------------------------------------------------------------------
-- (void) startAnimationForward: (UIView*)view {
-   
-    CGFloat x = CGRectGetMinX(view.frame);
-    CGFloat y = CGRectGetMinY(view.frame);
-    UIColor* color = [[UIColor alloc] init];
-    BOOL forward = arc4random() % 2;
-    
-    if (!forward) {
-    
-        if (x == 0 && y == 0) {
-            x = CGRectGetWidth(self.view.bounds) - (CGFloat)self.sizeView;
-            color = [self.colorArray objectAtIndex:1];
-        }
-        else if (x == CGRectGetWidth(self.view.bounds) - self.sizeView && y == 0) {
-            y = CGRectGetHeight(self.view.bounds) - self.sizeView;
-            color = [self.colorArray objectAtIndex:2];
-        }
-        else if (x == CGRectGetWidth(self.view.bounds) - self.sizeView &&  y == CGRectGetHeight(self.view.bounds) - self.sizeView) {
-            x = 0;
-            color = [self.colorArray objectAtIndex:3];
-        }
-        else if (x == 0 && y == CGRectGetHeight(self.view.bounds) - self.sizeView) {
-            y = 0;
-            color = [self.colorArray objectAtIndex:0];
-        }
-
- else {
-    
-        if (x == 0 && y == 0) {
-            y = CGRectGetHeight(self.view.bounds) - self.sizeView;
-            color = [self.colorArray objectAtIndex:3];
-        }
-        else if (x == 0 && y == CGRectGetHeight(self.view.bounds) - self.sizeView) {
-            x = CGRectGetWidth(self.view.bounds) - self.sizeView;
-            color = [self.colorArray objectAtIndex:2];
-        }
-        else if (x == CGRectGetWidth(self.view.bounds) - self.sizeView &&  y == CGRectGetHeight(self.view.bounds) - self.sizeView) {
-            y = 0;
-            color = [self.colorArray objectAtIndex:1];
-        }
-        else if (x == CGRectGetWidth(self.view.bounds) - self.sizeView && y == 0) {
-            x = 0;
-            color = [self.colorArray objectAtIndex:0];
-        }
- } }
-
+#pragma mark - Learner
+- (void) startAnimation:(UIView*)view withAnimation:(UIViewAnimationOptions)animation {
     
     [UIView animateWithDuration:4
-                          delay:0
-                        options:UIViewAnimationCurveLinear | UIViewAnimationOptionBeginFromCurrentState
+                          delay:1
+                        options: animation | UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat
                      animations:^{
-                         view.center = CGPointMake(x + self.sizeView / 2, y + self.sizeView / 2);
-                         view.backgroundColor = color;
-
-                     } completion:^(BOOL finished) {
-                
-                         __weak UIView* weakView = view;
-                         [self startAnimationForward:weakView];
+                         view.frame = CGRectMake(ENDX - SIZE, view.frame.origin.y, SIZE, SIZE);
+                         view.backgroundColor = [self randomColor];
+                     }
+                     completion:^(BOOL finished) {
                          
                      }];
-        }
-//-------------------------------------------------------------------------------
-
-- (void) viewDidAppear:(BOOL)animated {
     
-    [super viewDidAppear:animated];
+}
+//-------------------------------------------------------------------------------
+#pragma mark - Student
+
+- (void) startAnimationCorner:(UIView*)view toPoints:(NSArray*)pointsArray andColor:(NSArray*)color andStep:(NSInteger)step {
+
+    __block NSInteger steps = step;
+    
+    [UIView animateWithDuration:3
+                          delay:0
+                        options:UIViewAnimationOptionCurveLinear
+                     animations:^{
+                         view.frame = CGRectMake([[pointsArray objectAtIndex:steps]CGPointValue].x, [[pointsArray objectAtIndex:steps]CGPointValue].y, SIZE, SIZE);
+                         view.backgroundColor = [color objectAtIndex:steps];
+                     } completion:^(BOOL finished) {
+                         if (steps == 3) {
+                             steps = 0;
+                         }
+                         else steps++;
+                         
+                         if (view.tag == 1) {
+                             switch (steps) {
+                                 case 0:
+                                     view.transform = CGAffineTransformMakeRotation(-M_PI_2);
+                                     break;
+                                 case 1:
+                                     view.transform = CGAffineTransformMakeRotation(2*M_PI);
+                                     break;
+                                 case 2:
+                                     view.transform = CGAffineTransformMakeRotation(M_PI_2);
+                                     break;
+                                 case 3:
+                                     view.transform = CGAffineTransformMakeRotation(-M_PI);
+                                     break;
+                             } }
+                         
+                         [self startAnimationCorner:view toPoints:pointsArray andColor:color andStep:steps];
+                     }];
+   
 }
 
+//-------------------------------------------------------------------------------
+- (UIColor*) randomColor {
+    CGFloat hue = ( arc4random() % 256 / 256.0 );  //  0.0 to 1.0
+    CGFloat saturation = ( arc4random() % 128 / 256.0 ) + 0.5;  //  0.5 to 1.0, away from white
+    CGFloat brightness = ( arc4random() % 128 / 256.0 ) + 0.5;  //  0.5 to 1.0, away from black
+    UIColor* color = [UIColor colorWithHue:hue saturation:saturation brightness:brightness alpha:1];
+    return color;
+}
 
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+
 }
 
 @end
